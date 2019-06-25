@@ -6,14 +6,14 @@ WORKDIR /var/www/
 RUN rm -rf /var/www/html
 
 ENV DOCKERIZE_VERSION v0.6.1
-ENV COMPOSER_PROCESS_TIMEOUT=900  
+ENV COMPOSER_PROCESS_TIMEOUT=900
 
 RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
     && tar -C /usr/local/bin -xzvf dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
     && rm dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz
 
 COPY . /var/www/
-COPY .env.example .env
+COPY ./.env.example ./.env
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 RUN ln -s public html
