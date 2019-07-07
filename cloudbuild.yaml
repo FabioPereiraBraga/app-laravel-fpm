@@ -1,5 +1,5 @@
 steps:
 
 - id: "Rodando docker composer"
-  name: 'gcr.io/cloud-builders/docker'
-  args: ['docker', 'ps']
+  name: 'gcr.io/curso-micro-servico/docker-compose'
+  args: ['up', '-d']
