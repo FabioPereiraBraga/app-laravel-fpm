@@ -1,26 +1,26 @@
 steps:
 
 - id: "Rodando docker composer"
-  name: 'gcr.io/curso-micro-servico/docker-compose'
-  args: ['up', '-d']
+  name: 'gcr.io/$PROJECT_ID/docker-compose'
+  args: ['-f','docker-compose-cloudbuild.yaml','up', '-d']
 
 - id: "Executar composer"
   name: 'gcr.io/cloud-builders/docker'
-  args: ['exec','-it','app','composer','install']
+  args: ['exec','-t','app','composer','install']
 
 
 - id: "Copiar o arquivo .env.example para .env"
   name: 'gcr.io/cloud-builders/docker'
-  args: ['exec','-it','app','cp','.env.example','.env']
+  args: ['exec','-t','app','cp','.env.example','.env']
 
 - id: "Rodar um artisan key:generate"
   name: 'gcr.io/cloud-builders/docker'
-  args: ['exec','-it','app','php','artisan','key:generate']
+  args: ['exec','-t','app','php','artisan','key:generate']
 
 - id: "Executar as migrações"
   name: 'gcr.io/cloud-builders/docker'
-  args: ['exec','-it','app','php','artisan','migrate']
+  args: ['exec','-t','app','php','artisan','migrate']
 
 - id: "Executar os testes utilizando o PHPUnit"
   name: 'gcr.io/cloud-builders/docker'
-  args: ['exec','-it','app','./vendor/bin/phpunit','-c','/var/www/phpunit.xml']
+  args: ['exec','-t','app','./vendor/bin/phpunit','-c','/var/www/phpunit.xml']
