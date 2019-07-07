@@ -5,6 +5,7 @@ services:
     app: 
       build: .
       container_name: app
+      tty: true
       volumes:
         - .:/var/www
       depends_on:
