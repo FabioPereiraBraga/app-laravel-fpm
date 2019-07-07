@@ -9,7 +9,7 @@ steps:
   args: ['exec','-t','app','composer','install']
 
 
-- id: "Copiar o arquivo .env.example para .env"
+- id: "Copiar o arquivo .env.example"
   name: 'gcr.io/cloud-builders/docker'
   args: ['exec','-t','app','cp','.env.example','.env']
 
