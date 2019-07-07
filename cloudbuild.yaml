@@ -9,11 +9,11 @@ steps:
   args: ['exec','-t','app','composer','install']
 
 
-- id: "Copiar o arquivo .env.example para .env"
+- id: "Copiar o arquivo .env"
   name: 'gcr.io/cloud-builders/docker'
   args: ['exec','-t','app','cp','.env.example','.env']
 
-- id: "Rodar um artisan key:generate"
+- id: "Rodar  key:generate"
   name: 'gcr.io/cloud-builders/docker'
   args: ['exec','-t','app','php','artisan','key:generate']
 
@@ -21,6 +21,6 @@ steps:
   name: 'gcr.io/cloud-builders/docker'
   args: ['exec','-t','app','php','artisan','migrate']
 
-- id: "Executar os testes utilizando o PHPUnit"
+- id: "Executar os testes PHPUnit"
   name: 'gcr.io/cloud-builders/docker'
   args: ['exec','-t','app','./vendor/bin/phpunit','-c','/var/www/phpunit.xml']
