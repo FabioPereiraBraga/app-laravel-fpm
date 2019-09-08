@@ -2,11 +2,11 @@ version: '3'
 
 services:
 
-    app: 
+    app:
       build: .
       container_name: app
-      entrypoint: dockerize -template ./.docker/app/.env:.env  -template ./.docker/nginx/.env:./.docker/nginx/nginx.conf  -timeout 60s  -wait tcp://db:3306  ./.docker/app/entrypoint.sh
-      environment: 
+      entrypoint: dockerize -template ./.docker/app/.env:.env  -timeout 60s  -wait tcp://db:3306  ./.docker/app/entrypoint.sh
+      environment:
         - DB_HOST=db
         - DB_PORT=3306
         - DB_DATABASE=laravel
@@ -17,31 +17,31 @@ services:
       volumes:
         - .:/var/www
       depends_on:
-          - db  
+          - db
           - redis
-      networks: 
+      networks:
         - app-network
-        
+
     nginx:
       build: .docker/nginx
       container_name: nginx
       restart: always
       tty: true
-      depends_on: 
+      depends_on:
           - app
       ports:
-        - "8000:80"
+        - "8001:80"
       volumes:
         - .:/var/www
-      networks: 
-        - app-network  
+      networks:
+        - app-network
 
     redis:
         image: redis:alpine
         container_name: redis
-        expose: 
+        expose:
           - 6379
-        networks: 
+        networks:
         - app-network
 
     db:
@@ -53,15 +53,15 @@ services:
       ports:
           - "33006:3306"
       volumes:
-          - ./.docker/db/data:/var/lib/mysql    
+          - ./.docker/db/data:/var/lib/mysql
       environment:
           - MYSQL_DATABASE=laravel
           - MYSQL_ROOT_PASSWORD=root
           - MYSQL_USER=root
-      networks: 
+      networks:
           - app-network
-            
+
 
 networks:
   app-network:
-      driver: bridge   
+      driver: bridge

@@ -7,6 +7,8 @@
  * @author   Taylor Otwell <taylor@laravel.com>
  */
 
+use Symfony\Component\VarDumper\VarDumper;
+
 define('LARAVEL_START', microtime(true));
 
 /*

@@ -4,8 +4,12 @@
 /storage/*.key
 /vendor
 .env
+.idea/
 .phpunit.result.cache
 Homestead.json
 Homestead.yaml
 npm-debug.log
 yarn-error.log
+.phpstorm.meta.php
+_ide_helper.php
+_ide_helper_models.php
