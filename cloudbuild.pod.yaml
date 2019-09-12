@@ -1,0 +1,34 @@
+steps:
+
+- id: "Executar o docker-compose"
+  name: 'gcr.io/$PROJECT_ID/docker-compose'
+  args: ['-f','docker-compose-cloudbuild.yaml','up', '-d']
+
+- id: "Executar o composer"
+  name: 'gcr.io/cloud-builders/docker'
+  args: ['exec','-t','app','composer','install']
+
+
+- id: "Copiar o arquivo .env.example"
+  name: 'gcr.io/cloud-builders/docker'
+  args: ['exec','-t','app','cp','.env.example','.env']
+
+- id: "Rodar  key:generate"
+  name: 'gcr.io/cloud-builders/docker'
+  args: ['exec','-t','app','php','artisan','key:generate']
+
+- id: "Executar as migrações"
+  name: 'gcr.io/cloud-builders/docker'
+  args: ['exec','-t','app','php','artisan','migrate']
+
+- id: "Executar os testes PHPUnit"
+  name: 'gcr.io/cloud-builders/docker'
+  args: ['exec','-t','app','./vendor/bin/phpunit','-c','/var/www/phpunit.xml']
+
+- id: "Gerando Build"
+  name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'gcr.io/$PROJECT_ID/app-laravel:$SHORT_SHA', '-f','Dockerfile.prod','.']
+
+- id: "pushing image"
+  name: 'gcr.io/cloud-builders/docker'
+  args: ['push','gcr.io/$PROJECT_ID/app-laravel:$SHORT_SHA' ]
