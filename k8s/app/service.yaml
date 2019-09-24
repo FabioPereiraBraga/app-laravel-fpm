@@ -9,4 +9,4 @@ spec:
     port: 9000
     nodePort: 30080
   selector:
-    app: app
+    app: app-laravel
