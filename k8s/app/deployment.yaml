@@ -23,16 +23,16 @@ spec:
 
         envFrom:
         - configMapRef:
-            name: app-conf
+            name: app-config
 
         volumeMounts:
-        - name: app-conf
+        - name: app-config
           mountPath: /var/www/.env
           subPath: .env
 
 
       volumes:
-      - name: app-conf
+      - name: app-config
         configMap:
           name: app-config  
           items:  
