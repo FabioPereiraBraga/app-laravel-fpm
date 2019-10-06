@@ -4,14 +4,15 @@ services:
 
     app:
       build: .
-      container_name: app
-      entrypoint: dockerize -template ./.docker/app/.env:.env  -timeout 60s  -wait tcp://db:3306  ./.docker/app/entrypoint.sh
+      container_name: code-micro-videos
+      entrypoint: dockerize -template ./.docker/app/.env:.env   dockerize -template ./.docker/app/.env.testing:.env.testing   -timeout 60s  -wait tcp://db:3306  ./.docker/app/entrypoint.sh
       environment:
         - DB_HOST=db
         - DB_PORT=3306
-        - DB_DATABASE=laravel
-        - DB_USERNAME=root
-        - DB_PASSWORD=root
+        - _DB_DATABASE=code_micro_video
+        - _DB_USERNAME=root
+        - _DB_PASSWORD=root
+        - _TEST_DB_DATABASE=code_micro_video_test
         - APP_HOST=app
         - PORT_HOST=9000
       volumes:
@@ -54,8 +55,8 @@ services:
           - "33006:3306"
       volumes:
           - ./.docker/db/data:/var/lib/mysql
+          - ./.docker/mysql:/docker-entrypoint-initdb.d
       environment:
-          - MYSQL_DATABASE=laravel
           - MYSQL_ROOT_PASSWORD=root
           - MYSQL_USER=root
       networks:
