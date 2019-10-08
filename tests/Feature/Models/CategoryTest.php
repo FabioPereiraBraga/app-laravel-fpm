@@ -76,22 +76,13 @@ class CategoryTest extends TestCase
 
     public function testDelete()
     {
-        Category::create([
-            'name'=>'test1',
-            'is_active'=> true
-        ]);
-        Category::create([
-            'name'=>'test2',
-            'is_active'=> true
-        ]);
-        Category::create([
-            'name'=>'test3',
-            'is_active'=> false
-        ]);
+        /** @var Category $category */
+        $category = factory(Category::class)->create();
+        $category->delete();
+        $this->assertNull(Category::find($category->id));
 
-        $categoryRowns =Category::where('is_active', false)->delete();
-
-        $this->assertEquals(1, $categoryRowns);
+        $category->restore();
+        $this->assertNotNull(Category::find($category->id));
     }
 
     public function testUpdate()

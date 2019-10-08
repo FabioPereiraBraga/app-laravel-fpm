@@ -19,8 +19,8 @@ class GenreTest extends TestCase
         $attributes = ['name','is_active','id','created_at','deleted_at','updated_at'];
         $genre = Genre::all();
         $this->assertCount(1, $genre );
-        $categoryKeys = array_keys($genre->first()->getAttributes());
-        $this->assertEqualsCanonicalizing($attributes ,$categoryKeys);
+        $genreKeys = array_keys($genre->first()->getAttributes());
+        $this->assertEqualsCanonicalizing($attributes ,$genreKeys);
     }
 
     public function testCreate()
@@ -55,22 +55,13 @@ class GenreTest extends TestCase
 
     public function testDelete()
     {
-        Genre::create([
-            'name'=>'test1',
-            'is_active'=> true
-        ]);
-        Genre::create([
-            'name'=>'test2',
-            'is_active'=> true
-        ]);
-        Genre::create([
-            'name'=>'test3',
-            'is_active'=> false
-        ]);
+        /** @var Genre $genre */
+        $genre = factory(Genre::class)->create();
+        $genre->delete();
+        $this->assertNull(Genre::find($genre->id));
 
-        $GenreRowns =Genre::where('is_active', false)->delete();
-
-        $this->assertEquals(1, $GenreRowns);
+        $genre->restore();
+        $this->assertNotNull(Genre::find($genre->id));
     }
 
     public function testUpdate()
