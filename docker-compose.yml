@@ -5,7 +5,7 @@ services:
     app:
       build: .
       container_name: code-micro-videos
-      entrypoint: dockerize -template ./.docker/app/.env:.env   dockerize -template ./.docker/app/.env.testing:.env.testing   -timeout 60s  -wait tcp://db:3306  ./.docker/app/entrypoint.sh
+      entrypoint: dockerize    -timeout 60s  -wait tcp://db:3306  ./.docker/app/entrypoint.sh
       environment:
         - DB_HOST=db
         - DB_PORT=3306

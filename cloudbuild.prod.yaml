@@ -2,7 +2,7 @@ steps:
 
 - id: "Executar o docker-compose"
   name: 'gcr.io/$PROJECT_ID/docker-compose'
-  args: ['-f','docker-compose-cloudbuild.yaml','up', '-d']
+  args: ['-f','docker-compose.prod.yaml','up', '-d']
 
 - id: "Executar o composer"
   name: 'gcr.io/cloud-builders/docker'
@@ -31,7 +31,7 @@ steps:
 
 - id: "pushing image"
   name: 'gcr.io/cloud-builders/docker'
-  args: ['push','gcr.io/$PROJECT_ID/app-laravel:$SHORT_SHA' ] 
+  args: ['push','gcr.io/$PROJECT_ID/app-laravel:$SHORT_SHA' ]
 
 - id: "Adjusting deployment file - k8s"
   name: 'gcr.io/cloud-builders/gcloud'
@@ -40,7 +40,7 @@ steps:
     - '-c'
     - |
       sed 's#img-app-deployment#gcr.io/$PROJECT_ID/app-laravel:$SHORT_SHA#g' k8s/app/deployment.yaml > k8s/app/deployment-new.yaml;
-      cat k8s/app/deployment-new.yaml  
+      cat k8s/app/deployment-new.yaml
 
 - id: "Deployment k8s"
   name: 'gcr.io/cloud-builders/kubectl'
@@ -48,6 +48,6 @@ steps:
     - 'apply'
     - '-f'
     - 'k8s/app/deployment-new.yaml'
-  env: 
+  env:
   - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
   - 'CLOUDSDK_CONTAINER_CLUSTER=cluster-docker-laravel'

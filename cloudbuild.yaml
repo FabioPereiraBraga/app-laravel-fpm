@@ -2,7 +2,7 @@ steps:
 
 - id: "Executar o docker-compose"
   name: 'gcr.io/$PROJECT_ID/docker-compose'
-  args: ['-f','docker-compose-cloudbuild.yaml','up', '-d']
+  args: ['-f','docker-compose.prod.yaml','up', '-d']
 
 - id: "Executar o composer"
   name: 'gcr.io/cloud-builders/docker'
@@ -12,6 +12,11 @@ steps:
 - id: "Copiar o arquivo .env.example"
   name: 'gcr.io/cloud-builders/docker'
   args: ['exec','-t','app','cp','.env.example','.env']
+
+- id: "Copiar o arquivo .env.testing.example"
+  name: 'gcr.io/cloud-builders/docker'
+  args: ['exec','-t','app','cp','.env.testing.example','.env.testing']
+
 
 - id: "Rodar  key:generate"
   name: 'gcr.io/cloud-builders/docker'
