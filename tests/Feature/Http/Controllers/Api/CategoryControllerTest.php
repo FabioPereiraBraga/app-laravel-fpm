@@ -8,11 +8,14 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestResponse;
 use Illuminate\Foundation\Testing\WithFaker;
 use Lang;
+use Tests\Traits\TestSaves;
 use Tests\Traits\TestValidations;
 use Tests\TestCase;
 
 class CategoryControllerTest extends TestCase
 {
+    use DatabaseMigrations, TestValidations, TestSaves;
+
     private $category;
 
     protected function setUp(): void
@@ -22,8 +25,6 @@ class CategoryControllerTest extends TestCase
         $this->category->refresh();
 
     }
-
-    use DatabaseMigrations, TestValidations;
 
     /**
      * A basic feature test example.
@@ -48,68 +49,46 @@ class CategoryControllerTest extends TestCase
 
     public function testStorage()
     {
-        $response = $this->json('POST', route('categories.store'), [
-            'name' => 'test'
-        ]);
+        $data = [
+            'name'=>'teste'
+        ];
+        $this->assertStorage($data, $data + ['description'=>null,'is_active'=>true, 'deleted_at'=>null]);
 
-        $category = Category::find($response->json('id'));
-
-        $response->assertStatus(201)
-            ->assertJson($category->toArray());
-        $this->assertTrue($response->json('is_active'));
-        $this->assertNull($response->json('description'));
-
-        $response = $this->json('POST', route('categories.store'), [
+        $data = [
             'name' => 'test',
             'is_active' => false,
             'description' => 'description'
-        ]);
-
-        $response->assertJsonFragment([
-            'is_active' => false,
-            'description' => 'description'
-        ]);
+        ];
+        $this->assertStorage($data, $data + ['description'=>'description','is_active'=>false]);
 
     }
 
 
     public function testUpdate()
     {
-        $category = factory(Category::class)->create([
-            'is_active' => false,
-            'description' => 'description'
+
+
+        $data = [ 'name' => 'test',
+            'description' => 'test',
+            'is_active' => true
+        ];
+
+        $response = $this->assertUpdate($data, $data + ['deleted_at'=>null] );
+        $response->assertJsonStructure([
+            'created_at', 'updated_at'
         ]);
 
-        $response = $this->json('PUT',
-            route('categories.update', ['category' => $category->id]),
-            [
-                'name' => 'test',
-                'description' => 'test',
-                'is_active' => true
-            ]);
 
-        $category = Category::find($response->json('id'));
+        $data['description'] = '';
+        $this->assertUpdate($data, array_merge($data,['description'=>null]) );
 
-        $response->assertStatus(200)
-            ->assertJson($category->toArray())
-            ->assertJsonFragment([
-                'is_active' => true,
-                'description' => 'test'
-            ]);
+        $data['description'] = null;
+        $this->assertUpdate($data, array_merge($data,['description'=>null]) );
+
+        $data['description'] = 'test';
+        $this->assertUpdate($data, array_merge($data,['description'=>'test']) );
 
 
-        $response = $this->json('PUT',
-            route('categories.update', ['category' => $category->id]),
-            [
-                'name' => 'test',
-                'description' => ''
-            ]);
-
-
-        $response
-            ->assertJsonFragment([
-                'description' => null
-            ]);
 
     }
 
@@ -168,6 +147,10 @@ class CategoryControllerTest extends TestCase
     public function routeUpdate()
     {
         return  route('categories.update', ['category' =>  $this->category->id]);
+    }
+    public function model()
+    {
+        return Category::class;
     }
 
 
