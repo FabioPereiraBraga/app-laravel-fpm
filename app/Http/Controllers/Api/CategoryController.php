@@ -5,42 +5,28 @@ namespace App\Http\Controllers\Api;
 use App\Models\Category;
 use Illuminate\Http\Request;
 
-class CategoryController extends Controller
+class CategoryController extends BasicCrudController
 {
     private $rules = [
         'name'=>'required|max:255',
+        'description'=>'nullable',
         'is_active'=>'boolean'
     ];
 
-    public function index()
+    public function model()
     {
-        $result = Category::all();
-        return $result;
+        return Category::class;
     }
 
-    public function store(Request $request)
+    protected function ruleStorage()
     {
-        $this->validate($request,$this->rules);
-        $category = Category::create($request->all());
-        $category->refresh();
-        return $category;
+        return $this->rules;
     }
 
-    public function show(Category $category)
+    protected function ruleUpdate()
     {
-       return $category;
+        return $this->rules;
     }
 
-    public function update(Request $request, Category $category)
-    {
 
-        $this->validate($request,$this->rules);
-        $category->update($request->all());
-        return  $category;
-    }
-
-    public function destroy(Category $category)
-    {
-       $category->delete();
-    }
 }

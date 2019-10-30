@@ -24,6 +24,7 @@ class CategoryControllerTest extends TestCase
         $this->category = factory(Category::class)->create();
         $this->category->refresh();
 
+
     }
 
     /**
@@ -34,7 +35,6 @@ class CategoryControllerTest extends TestCase
     public function testIndex()
     {
         $response = $this->get(route('categories.index'));
-
         $response->assertStatus(200)
             ->assertJson([$this->category->toArray()]);
     }
@@ -42,7 +42,6 @@ class CategoryControllerTest extends TestCase
     public function testShow()
     {
         $response = $this->get(route('categories.show', ['category' => $this->category->id]));
-
         $response->assertStatus(200)
             ->assertJson($this->category->toArray());
     }
@@ -97,7 +96,7 @@ class CategoryControllerTest extends TestCase
        $response = $this->json(
            'DELETE',
            route('categories.destroy',['category'=>$this->category->id]));
-        $response->assertStatus(200);
+        $response->assertStatus(204);
 
         $response = $this->get(route('categories.show', ['category' => $this->category->id]));
         $response->assertStatus(404);

@@ -90,7 +90,7 @@ class GenreControllerTest extends TestCase
        $response = $this->json(
            'DELETE',
            route('genres.destroy',['genre'=>$genre->id]));
-        $response->assertStatus(200);
+        $response->assertStatus(204);
 
         $response = $this->get(route('genres.show', ['genre' => $genre->id]));
         $response->assertStatus(404);
