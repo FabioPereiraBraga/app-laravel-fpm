@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\VideoApp\Video;
+use App\Models\Video;
 use Illuminate\Http\Request;
 
 class VideoController extends BasicCrudController
@@ -11,7 +11,14 @@ class VideoController extends BasicCrudController
 
     public function __construct()
     {
-
+      $this->rules = [
+          'title' => 'required|max:255',
+          'description' => 'required',
+          'year_launched' => 'required|date_format:Y',
+          'opened' => 'boolean',
+          'rating' => 'required|in:'.implode(',', Video::RATING_LIST),
+          'duration' => 'required|integer'
+      ];
     }
 
     protected function model()
@@ -21,11 +28,11 @@ class VideoController extends BasicCrudController
 
     protected function ruleStorage()
     {
-
+     return $this->rules;
     }
 
     protected function ruleUpdate()
     {
-        // TODO: Implement ruleUpdate() method.
+        return $this->rules;
     }
 }

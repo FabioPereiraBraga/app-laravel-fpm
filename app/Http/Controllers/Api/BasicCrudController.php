@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use Illuminate\Http\Request;
+use Symfony\Component\VarDumper\VarDumper;
 
 abstract class BasicCrudController extends Controller
 {
@@ -42,6 +43,7 @@ abstract class BasicCrudController extends Controller
         $dataValidate = $this->validate($request,$this->ruleUpdate());
         $model = $this->findOrFail($category);
         $model->update($dataValidate);
+        $model->refresh();
         return  $model;
     }
 

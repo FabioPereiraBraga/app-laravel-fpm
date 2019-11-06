@@ -4,10 +4,7 @@ namespace Tests\Feature\Http\Controllers\Api;
 
 use App\Models\Video;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\TestResponse;
-use Illuminate\Foundation\Testing\WithFaker;
-use Lang;
+use Symfony\Component\VarDumper\VarDumper;
 use Tests\Traits\TestSaves;
 use Tests\Traits\TestValidations;
 use Tests\TestCase;
@@ -17,12 +14,21 @@ class VideoControllerTest extends TestCase
     use DatabaseMigrations, TestValidations, TestSaves;
 
     private $video;
+    private $sendData;
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->video = factory(Video::class)->create();
         $this->video->refresh();
+
+        $this->sendData = [
+            'title' => 'title',
+            'description'=> 'description',
+            'year_launched'=> 2010,
+            'rating'=> Video::RATING_LIST[0],
+            'duration'=> 90
+        ];
 
 
     }
@@ -34,118 +40,141 @@ class VideoControllerTest extends TestCase
      */
     public function testIndex()
     {
-        $response = $this->get(route('categories.index'));
+        $response = $this->get(route('videos.index'));
         $response->assertStatus(200)
             ->assertJson([$this->video->toArray()]);
     }
 
     public function testShow()
     {
-        $response = $this->get(route('categories.show', ['video' => $this->video->id]));
+        $response = $this->get(route('videos.show', ['video' => $this->video->id]));
         $response->assertStatus(200)
             ->assertJson($this->video->toArray());
     }
 
-    public function testStorage()
+    public function testInvalidationRequired()
     {
         $data = [
-            'name'=>'teste'
+            'title' => '',
+            'description'=> '',
+            'year_launched'=> '',
+            'rating'=> '',
+            'duration'=> ''
         ];
-        $this->assertStorage($data, $data + ['description'=>null,'is_active'=>true, 'deleted_at'=>null]);
 
-        $data = [
-            'name' => 'test',
-            'is_active' => false,
-            'description' => 'description'
-        ];
-        $this->assertStorage($data, $data + ['description'=>'description','is_active'=>false]);
-
+        $this->assertInvalidationInStorageAction($data, 'required');
+        $this->assertInvalidationInUpdateAction($data, 'required');
     }
 
+    public function  testInvalidationMax()
+    {
+        $data = [
+            'title' => str_repeat('a', 256)
+        ];
 
-    public function testUpdate()
+        $this->assertInvalidationInStorageAction($data, 'max.string', ['max'=>'255']);
+        $this->assertInvalidationInUpdateAction($data, 'max.string', ['max'=>'255']);
+    }
+
+    public function testInvalidationInteger()
+    {
+        $data = [
+          'duration'=>'s'
+        ];
+
+        $this->assertInvalidationInStorageAction($data, 'integer');
+        $this->assertInvalidationInUpdateAction($data, 'integer');
+    }
+
+    public function testInvalidationYearLaunchedField()
+    {
+        $data = [
+          'year_launched'=>'a'
+        ];
+
+        $this->assertInvalidationInStorageAction($data, 'date_format', ['format'=>'Y']);
+        $this->assertInvalidationInUpdateAction($data, 'date_format', ['format'=>'Y']);
+    }
+
+    public function testInvalidationOpenedField()
+    {
+        $data = [
+            'opened'=>'s'
+        ];
+
+        $this->assertInvalidationInStorageAction($data, 'boolean');
+        $this->assertInvalidationInUpdateAction($data, 'boolean');
+    }
+
+    public function testInvalidationRatingField()
+    {
+        $data = [
+            'rating'=> 0
+        ];
+
+        $this->assertInvalidationInStorageAction($data, 'in');
+        $this->assertInvalidationInUpdateAction($data, 'in');
+    }
+
+    public function testSave()
     {
 
-
-        $data = [ 'name' => 'test',
-            'description' => 'test',
-            'is_active' => true
+        $data = [
+            [
+              'send_data' => $this->sendData,
+              'test_data' => $this->sendData + ['opened'=> false]
+            ],
+            [
+                'send_data' => $this->sendData + ['opened'=> true],
+                'test_data' => $this->sendData + ['opened'=> true]
+            ],
+            [
+                'send_data' => $this->sendData + ['rating' => Video::RATING_LIST[1]],
+                'test_data' => $this->sendData + ['rating' => Video::RATING_LIST[1]]
+            ]
         ];
 
-        $response = $this->assertUpdate($data, $data + ['deleted_at'=>null] );
-        $response->assertJsonStructure([
-            'created_at', 'updated_at'
-        ]);
+        foreach ($data as $key => $value){
+            $response = $this->assertStorage(
+                $value['send_data'],
+                $value['test_data'] + ['deleted_at'=>null]
+            );
+            $response->assertJsonStructure([
+               'created_at',
+               'updated_at'
+            ]);
 
-
-        $data['description'] = '';
-        $this->assertUpdate($data, array_merge($data,['description'=>null]) );
-
-        $data['description'] = null;
-        $this->assertUpdate($data, array_merge($data,['description'=>null]) );
-
-        $data['description'] = 'test';
-        $this->assertUpdate($data, array_merge($data,['description'=>'test']) );
-
-
-
+            $response = $this->assertUpdate(
+                $value['send_data'],
+                $value['test_data'] + ['deleted_at'=>null]
+            );
+            $response->assertJsonStructure([
+                'created_at',
+                'updated_at'
+            ]);
+        }
     }
+
 
     public function testDelete()
     {
        $response = $this->json(
            'DELETE',
-           route('categories.destroy',['video'=>$this->video->id]));
+           route('videos.destroy',['video'=>$this->video->id]));
         $response->assertStatus(204);
-
-        $response = $this->get(route('categories.show', ['video' => $this->video->id]));
-        $response->assertStatus(404);
+        $this->assertNull(Video::find($this->video->id));
+        $this->assertNotNull(Video::withTrashed()->find($this->video->id));
     }
 
-
-    public function testInvalidationData()
-    {
-        $data = [
-            'name' => ''
-        ];
-        $this->assertInvalidationInStorageAction($data, 'required');
-
-        $data = [
-            'name' => str_repeat('a', 256),
-        ];
-        $this->assertInvalidationInStorageAction($data, 'max.string',['max' => 255]);
-
-        $data = [
-            'is_active' => 'a'
-        ];
-        $this->assertInvalidationInStorageAction($data, 'boolean');
-
-        $data = [
-            'name' => ''
-        ];
-        $this->assertInvalidationInUpdateAction($data, 'required');
-
-        $data = [
-            'name' => str_repeat('a', 256),
-        ];
-        $this->assertInvalidationInUpdateAction($data, 'max.string',['max' => 255]);
-
-        $data = [
-            'is_active' => 'a'
-        ];
-        $this->assertInvalidationInUpdateAction($data, 'boolean');
-
-
-    }
 
     public function routeStore()
     {
-        return  route('categories.store');
+        return  route('videos.store');
     }
 
     public function routeUpdate()
     {
-        return  route('categories.update', ['video' =>  $this->video->id]);
+        return  route('videos.update', ['video' =>  $this->video->id]);
     }
     public function model()
     {
