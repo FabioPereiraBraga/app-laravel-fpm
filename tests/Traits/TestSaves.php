@@ -13,7 +13,7 @@ trait TestSaves
       /** @var TestResponse $response */
       $response = $this->json('POST',$this->routeStore(),$sendData);
       if($response->status() !== 201){
-          throw new \Exception("Response status nust be 201, given {$response->status()}: \n {$response->content()}");
+          throw new \Exception("Response status nust be 201, given {$response->status()}: \n {$response->getContent()}");
       }
 
       $this->assertInDataBase($testDatabase, $response);
