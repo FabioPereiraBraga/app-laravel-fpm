@@ -9,6 +9,7 @@ use App\Models\Video;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Http\Request;
 use Symfony\Component\VarDumper\VarDumper;
+use Tests\Exception\TestException;
 use Tests\Traits\TestSaves;
 use Tests\Traits\TestValidations;
 use Tests\TestCase;
@@ -177,13 +178,21 @@ class VideoControllerTest extends TestCase
             ->withAnyArgs()
             ->andReturn([]);
 
+        $controller
+            ->shouldReceive('handleRelations')
+            ->once()
+            ->andThrow(new TestException());
+
         $request = \Mockery::mock(Request::class);
 
-        $controller->shouldReceive('handleRelations')
-            ->once()
-            ->andThrow(new \Exception());
 
-        $controller->store($request);
+
+        try{
+            $controller->store($request);
+        }catch (TestException $e) {
+            $this->assertCount(1, Video::all());
+        }
+
     }
     public function testSave()
     {
