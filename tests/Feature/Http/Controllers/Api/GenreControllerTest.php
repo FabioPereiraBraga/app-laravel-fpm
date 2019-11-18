@@ -2,18 +2,40 @@
 
 namespace Tests\Feature\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\GenreController;
+use App\Http\Controllers\Api\VideoController;
+use App\Models\Category;
 use App\Models\Genre;
+use App\Models\Video;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestResponse;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Http\Request;
 use Lang;
+use Tests\Exception\TestException;
 use Tests\TestCase;
+use Tests\Traits\TestValidations;
 
 class GenreControllerTest extends TestCase
 {
-    use DatabaseMigrations;
+    use DatabaseMigrations, TestValidations;
 
+    private $genre;
+    private $sendData;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->genre = factory(Genre::class)->create();
+        $this->genre->refresh();
+
+        $this->sendData = [
+            'name' => 'name',
+            'is_active' => true
+        ];
+
+    }
     /**
      * A basic feature test example.
      *
@@ -21,11 +43,10 @@ class GenreControllerTest extends TestCase
      */
     public function testIndex()
     {
-        $genre = factory(Genre::class)->create();
         $response = $this->get(route('genres.index'));
-
         $response->assertStatus(200)
-            ->assertJson([$genre->toArray()]);
+            ->assertJson([$this->genre->toArray()]);
+
     }
 
     public function testShow()
@@ -39,8 +60,10 @@ class GenreControllerTest extends TestCase
 
     public function testStorage()
     {
+        $category = factory(Category::class)->create();
         $response = $this->json('POST', route('genres.store'), [
-            'name' => 'test'
+            'name' => 'test',
+            'categories_id'=>[$category->id]
         ]);
 
         $genre = Genre::find($response->json('id'));
@@ -51,6 +74,7 @@ class GenreControllerTest extends TestCase
 
         $response = $this->json('POST', route('genres.store'), [
             'name' => 'test',
+            'categories_id'=>[$category->id],
             'is_active' => false
         ]);
 
@@ -60,9 +84,69 @@ class GenreControllerTest extends TestCase
 
     }
 
+    public function testInvalidationCategoriesIdField()
+    {
+        $data = [
+            'categories_id'=>'s'
+        ];
+
+
+        $this->assertInvalidationInStorageAction($data, 'array');
+        $this->assertInvalidationInUpdateAction($data, 'array');
+
+        $data = [
+            'categories_id'=>[100]
+        ];
+
+        $this->assertInvalidationInStorageAction($data, 'exists');
+        $this->assertInvalidationInUpdateAction($data, 'exists');
+
+        $data = [
+            'categories_id'=>''
+        ];
+
+        $this->assertInvalidationInStorageAction($data, 'required');
+        $this->assertInvalidationInUpdateAction($data, 'required');
+
+    }
+
+
+    public function testRollbackStorage()
+    {
+        $controller = \Mockery::mock(GenreController::class)
+            ->makePartial()
+            ->shouldAllowMockingProtectedMethods();
+
+        $controller
+            ->shouldReceive('validate')
+            ->withAnyArgs()
+            ->andReturn($this->sendData);
+
+        $controller
+            ->shouldReceive('ruleStorage')
+            ->withAnyArgs()
+            ->andReturn([]);
+
+        $controller
+            ->shouldReceive('handleRelations')
+            ->once()
+            ->andThrow(new TestException());
+
+        $request = \Mockery::mock(Request::class);
+
+
+
+        try{
+            $controller->store($request);
+        }catch (TestException $e) {
+            $this->assertCount(1, Genre::all());
+        }
+
+    }
 
     public function testUpdate()
     {
+        $category = factory(Category::class)->create();
         $genre = factory(Genre::class)->create([
             'is_active' => false
         ]);
@@ -71,7 +155,8 @@ class GenreControllerTest extends TestCase
             route('genres.update', ['genre' => $genre->id]),
             [
                 'name' => 'test',
-                'is_active' => true
+                'is_active' => true,
+                'categories_id'=>[$category->id]
             ]);
 
         $genre = Genre::find($response->json('id'));
@@ -154,6 +239,20 @@ class GenreControllerTest extends TestCase
             ->assertJsonFragment([
                 Lang::get('validation.boolean', ['attribute' => 'is active'])
             ]);
+    }
+
+    public function routeStore()
+    {
+        return  route('genres.store');
+    }
+
+    public function routeUpdate()
+    {
+        return  route('genres.update', ['genre' =>  $this->genre->id]);
+    }
+    public function model()
+    {
+        return Genre::class;
     }
 
 }
