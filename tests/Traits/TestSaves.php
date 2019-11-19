@@ -15,7 +15,6 @@ trait TestSaves
       if($response->status() !== 201){
           throw new \Exception("Response status nust be 201, given {$response->status()}: \n {$response->getContent()}");
       }
-
       $this->assertInDataBase($testDatabase, $response);
       $this->assertjsonResponseContent($response, $testDatabase, $testJsonData);
 

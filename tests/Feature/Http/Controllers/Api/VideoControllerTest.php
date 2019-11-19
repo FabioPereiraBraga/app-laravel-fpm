@@ -132,6 +132,18 @@ class VideoControllerTest extends TestCase
         $this->assertInvalidationInStorageAction($data, 'exists');
         $this->assertInvalidationInUpdateAction($data, 'exists');
 
+
+        $category = factory(Category::class)->create();
+        $category->delete();
+
+        $data = [
+            'categories_id'=>[$category->id]
+        ];
+
+        $this->assertInvalidationInStorageAction($data, 'exists');
+        $this->assertInvalidationInUpdateAction($data, 'exists');
+
+
     }
 
     public function testInvalidationGenresIdField()
@@ -146,6 +158,16 @@ class VideoControllerTest extends TestCase
 
         $data = [
             'genres_id'=>[100]
+        ];
+
+        $this->assertInvalidationInStorageAction($data, 'exists');
+        $this->assertInvalidationInUpdateAction($data, 'exists');
+
+        $genre = factory(Genre::class)->create();
+        $genre->delete();
+
+        $data = [
+            'genres_id'=>[$genre->id]
         ];
 
         $this->assertInvalidationInStorageAction($data, 'exists');
@@ -198,7 +220,7 @@ class VideoControllerTest extends TestCase
     {
         $category = factory(Category::class)->create();
         $genre = factory(Genre::class)->create();
-
+        $genre->categories()->sync($category->id);
         $data = [
             [
               'send_data' => $this->sendData + [
@@ -235,6 +257,9 @@ class VideoControllerTest extends TestCase
                'updated_at'
             ]);
 
+            $this->assertHasCategory($response->json('id'), $category->id);
+            $this->assertHasGenre($response->json('id'), $genre->id);
+
             $response = $this->assertUpdate(
                 $value['send_data'],
                 $value['test_data'] + ['deleted_at'=>null]
@@ -243,9 +268,27 @@ class VideoControllerTest extends TestCase
                 'created_at',
                 'updated_at'
             ]);
+
+            $this->assertHasCategory($response->json('id'), $category->id);
+            $this->assertHasGenre($response->json('id'), $genre->id);
         }
     }
 
+    protected function assertHasCategory($videoId, $categoriesId)
+    {
+        $this->assertDatabaseHas('category_video',[
+            'video_id'=>$videoId,
+            'category_id'=>$categoriesId
+        ]);
+    }
+
+    protected function assertHasGenre($videoId, $genreId)
+    {
+        $this->assertDatabaseHas('genre_video',[
+            'video_id'=>$videoId,
+            'genre_id'=>$genreId
+        ]);
+    }
 
     public function testDelete()
     {
