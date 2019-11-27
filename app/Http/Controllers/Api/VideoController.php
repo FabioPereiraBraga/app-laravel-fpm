@@ -24,49 +24,39 @@ class VideoController extends BasicCrudController
           'genres_id' => [
               'required',
               'array',
-              'exists:genres,id,deleted_at,NULL',
-              new GenresHasCategoriesRule(\request('categories_id'))
-           ]
+              'exists:genres,id,deleted_at,NULL'
+           ],
+          'video_file'=>'mimetypes:video/mp4|max:12'
       ];
     }
 
     public function store(Request $request)
     {
-        $self = $this;
+        $this->addRuleIfGenreHasCategories($request);
         $validateData = $this->validate($request,$this->ruleStorage());
-           /** @var Video $obj */
-        $obj = \DB::transaction(function() use($request, $validateData, $self){
-               $obj = $this->model()::create($validateData);
-               $self->handleRelations($obj, $request);
-               return $obj;
-           });
-
-           $obj->refresh();
-           return $obj;
+        $obj = $this->model()::create($validateData);
+        $obj->refresh();
+        return $obj;
 
     }
 
     public function update(Request $request, $category)
     {
         $self = $this;
+        $this->addRuleIfGenreHasCategories($request);
         $dataValidate = $this->validate($request,$this->ruleUpdate());
         $model = $this->findOrFail($category);
-
-        $model = \DB::transaction(function() use($request,$dataValidate,$model, $self){
-            $model->update($dataValidate);
-            $self->handleRelations($model, $request);
-            return $model;
-        });
-
+        $model->update($dataValidate);
         $model->refresh();
         return  $model;
 
     }
 
-    protected function handleRelations($video, Request $request)
+    protected function addRuleIfGenreHasCategories(Request $request)
     {
-        $video->categories()->sync($request->get('categories_id'));
-        $video->genres()->sync($request->get('genres_id'));
+        $categories = ($request->get('categories_id') )? $request->get('categories_id') : [];
+        $this->rules['genres_id'][] = new GenresHasCategoriesRule($categories);
+
     }
 
     protected function model()
