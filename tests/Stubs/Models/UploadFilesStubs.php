@@ -13,7 +13,7 @@ class UploadFilesStubs extends Model
    protected $table = 'upload_file_stubs';
    protected $fillable = ['name', 'file1', 'file2'];
 
-   public static $filerFilters = ['file1', 'file2'];
+   public static $filerFilters = ['file1', 'file2','filme','trailer'];
 
    public static function makeTable()
    {

@@ -30,7 +30,9 @@ class VideoCrudTest extends BasicVideoTestCase
              'rating',
              'title',
              'updated_at',
-             'year_launched'
+             'year_launched',
+            'thumb_file',
+            'video_file'
         ];
 
         $this->assertEqualsCanonicalizing($attributes ,$videoKeys);
