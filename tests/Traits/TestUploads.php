@@ -33,7 +33,7 @@ trait TestUploads
                 $field => $file
             ]);
 
-            $this->assertInvalidationFields($response, [$field], $rule, $ruleParams);
+            $this->assertInvalidationFields($response, [$field], 'max.file', ['max'=>$maxSize]);
         }
     }
 }
