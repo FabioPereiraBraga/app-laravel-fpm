@@ -16,10 +16,10 @@ trait UploadFiles
          $fieldsUpdated = array_keys($model->getDirty());
          $fileUpdated = array_intersect($fieldsUpdated, self::$filerFilters);
          $filesFilter = Arr::where($fileUpdated, function($fileField) use($model) {
-             return $model->getOriginal($fileField);
+             return $model->getOriginal($fileField); // !== null
          });
          $model->oldFiles = array_map(function($fileField) use($model){
-             return $model->getOriginal($fileField);
+             return $model->getOriginal($fileField); // pega o valor original (antigo);
          }, $filesFilter);
      });
     }

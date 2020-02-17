@@ -12,7 +12,16 @@ use Illuminate\Foundation\Testing\DatabaseMigrations;
 
 class VideoCrudTest extends BasicVideoTestCase
 {
+   private $fileFieldsData = [];
 
+   public function setUp(): void
+   {
+       parent::setUp();
+      
+        foreach (Video::$filerFilters as $field) {
+            $this->fileFieldsData[$field] = "$field.test";
+        }
+   }
 
     public function testList()
     {
@@ -40,18 +49,14 @@ class VideoCrudTest extends BasicVideoTestCase
 
     public function testCreateWithBasicField()
     {
-        $fileFields = [];
-        foreach (Video::$filerFilters as $field) {
-            $fileFields[$field] = "$field.test";
-        }
 
-        $video = Video::create($this->data + $fileFields);
+        $video = Video::create($this->data + $this->fileFieldsData);
         $video->refresh();
 
         $this->assertEquals(36, strlen($video->id) );
         $this->assertFalse($video->opened);
         $this->assertDatabaseHas('videos',
-            $this->data + $fileFields + ['opened' => false]);
+            $this->data + $this->fileFieldsData + ['opened' => false]);
 
         $video = Video::create(array_merge($this->data, ['opened' => true]));
         $video->refresh();
@@ -81,9 +86,9 @@ class VideoCrudTest extends BasicVideoTestCase
         $video = factory(Video::class)->create([
             'opened'=>false
         ]);
-        $video->update($this->data);
+        $video->update($this->data + $this->fileFieldsData);
         $this->assertFalse($video->opened);
-        $this->assertDatabaseHas('videos', array_merge($this->data, ['opened'=> false] ) );
+        $this->assertDatabaseHas('videos', array_merge($this->data + $this->fileFieldsData, ['opened'=> false] ) );
 
 
         $video = factory(Video::class)->create([
@@ -93,7 +98,7 @@ class VideoCrudTest extends BasicVideoTestCase
                 ['opened'=>true]
         ));
         $this->assertTrue($video->opened);
-        $this->assertDatabaseHas('videos', $this->data + ['opened'=> true]);
+        $this->assertDatabaseHas('videos', $this->data + $this->fileFieldsData + ['opened'=> true]);
     }
 
     public function testUpdateWithRelations()
