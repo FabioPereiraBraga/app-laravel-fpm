@@ -1,8 +1,24 @@
 steps:
+- id: "Description Chave Storage"
+  name: 'gcr.io/cloud-builders/gcloud'
+  args:
+    - kms 
+    - decrypt
+    - --location=global 
+    - --keyring=crip-code-video-storage
+    - --key=key-storage 
+    - --plaintext-file=./storage/credentials/google/curso-micro-servico-storage.json
+    - --ciphertext-file=./storage/credentials/google/curso-micro-servico-storage.json.enc
 
 - id: "Executar o docker-compose"
   name: 'gcr.io/$PROJECT_ID/docker-compose'
   args: ['-f','docker-compose.prod.yaml','up', '-d']
+  env:
+    - TESTING_PROD=true
+    - GOOGLE_CLOUD_PROJECT_ID=$PROJECT_ID
+    - GOOGLE_CLOUD_KEY_FILE=curso-micro-servico-storage.json
+    - GOOGLE_CLOUD_STORAGE_BUCKET=videos-codeflix
+    - GOOGLE_CLOUD_STORAGE_API_URI=https://storage.cloud.google.com/videos-codeflix
 
 - id: "Executar o composer"
   name: 'gcr.io/cloud-builders/docker'

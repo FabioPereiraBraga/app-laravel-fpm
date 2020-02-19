@@ -305,7 +305,7 @@
   ),
   'filesystems' => 
   array (
-    'default' => 'gcs',
+    'default' => 'video_local',
     'cloud' => 's3',
     'disks' => 
     array (
