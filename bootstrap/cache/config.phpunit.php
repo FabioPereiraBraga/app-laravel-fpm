@@ -323,11 +323,13 @@
       array (
         'driver' => 'local',
         'root' => '/var/www/storage/app',
+        'url' => 'http://localhost/storage/videos',
       ),
       'video_local' => 
       array (
         'driver' => 'local',
         'root' => '/var/www/storage/app/public/videos',
+        'url' => 'http://localhost/storage/videos',
       ),
       'public' => 
       array (

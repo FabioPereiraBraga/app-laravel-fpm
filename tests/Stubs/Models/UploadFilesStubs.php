@@ -35,4 +35,9 @@ class UploadFilesStubs extends Model
   {
       return 1;
   }
+
+  public function relativeFilePath($value)
+  {
+    return "{$this->uploadDir()}/{$value}";
+  }
 }

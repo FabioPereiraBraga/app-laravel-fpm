@@ -1,9 +1,18 @@
 <?php
 
+use App\Models\Genre;
+use App\Models\Video;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
+use Illuminate\Http\UploadedFile;
 
 class VideosTableSeeder extends Seeder
 {
+    private $allGenres;
+    private $relations = [
+        'genres_id'=>[],
+        'categories_id'=>[]
+    ];
     /**
      * Run the database seeds.
      *
@@ -11,19 +20,57 @@ class VideosTableSeeder extends Seeder
      */
     public function run()
     {
-        $genres = \App\Models\Genre::all();
-        factory(\App\Models\Video::class, 100)
-            ->create()
-            ->each(function (\App\Models\Video $video) use($genres) {
-               $subGenres = $genres->random(5)->load('categories');
-               $categoriesId = [];
-                foreach ($subGenres as $genre) {
-                    array_push($categoriesId, ...$genre->categories->pluck('id')->toArray());
-               }
-                $categoriesId = array_unique($categoriesId);
-                $video->categories()->attach($categoriesId);
-                $video->genres()->attach($subGenres->pluck('id')->toArray());
-             });
+        $dir = \Storage::getDriver()->getAdapter()->getPathPrefix();
+        \File::deleteDirectory($dir, true);
 
+        $self = $this;
+        $this->allGenres = Genre::all();
+        Model::reguard(); //mass assigment
+
+        factory(Video::class, 100)
+            ->make()
+            ->each(function (Video $video) use($self) {
+               $self->fetchRelations();
+               Video::create(
+                   array_merge($video->toArray(),
+                   [
+                    'thumb_file'=>$self->getImageFile(),
+                    'banner_file'=>$self->getImageFile(),   
+                    'video_file'=>$self->getVideoFile(),
+                    'trailer_file'=>$self->getVideoFile()
+                   ],
+                   $this->relations )
+                   );
+             });
+             Model::unguard();     
+
+    }
+
+    private function fetchRelations()
+    {
+        $subGenres = $this->allGenres->random(5)->load('categories');
+        $categoriesId = [];
+        foreach($subGenres as $genre){
+           array_push($categoriesId, ...$genre->categories->pluck('id')->toArray());
+        }
+        $categoriesId = array_unique($categoriesId);
+        $genresId = $subGenres->pluck('id')->toArray();
+        $this->relations['genres_id'] = $genresId;
+        $this->relations['categories_id'] = $categoriesId;
+    }
+
+    private function getImageFile()
+    {
+        return new UploadedFile(
+            storage_path('faker/thumbs/Laravel Framework.png'),
+            'Laravel Framework.png'
+        );
+    }
+    private function getVideoFile()
+    {
+        return new UploadedFile(
+            storage_path('faker/videos/01-Como vai funcionar os upload.mp4'),
+            '01-Como vai funcionar os upload.mp4'
+        );
     }
 }
